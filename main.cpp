@@ -37,6 +37,8 @@ void writePgm(const unsigned char* bitmap, unsigned long int size)
     }
 }
 
+uint64_t gFrame = 0;
+
 int main()
 {
 //    writePgm(T_arg, sizeof(T_arg));
@@ -56,6 +58,11 @@ long random(long howsmall, long howbig)
     return 0;
 }
 
+char* ltoa(long l, char * buffer, int radix)
+{
+    assert(0);
+}
+
 void Arduboy2Base::begin()
 {
 }
@@ -70,8 +77,7 @@ void Arduboy2Base::initRandomSeed()
 
 bool Arduboy2Base::everyXFrames(uint8_t frames)
 {
-    assert(0);
-    return true;
+    return gFrame%frames == 0;
 }
 
 bool Arduboy2Base::justPressed(uint8_t button)
@@ -79,13 +85,41 @@ bool Arduboy2Base::justPressed(uint8_t button)
     assert(0);
 }
 
+bool Arduboy2Base::collide(Rect rect1, Rect rect2)
+{
+    assert(0);
+    return false;
+}
+
+bool Arduboy2Base::nextFrame()
+{
+    gFrame++;
+    return true;
+}
+
+void Arduboy2Base::pollButtons()
+{
+}
+
+void Arduboy2Base::clear()
+{
+}
+
+void Arduboy2Base::display()
+{
+}
+
 ArduboyTones::ArduboyTones(bool (*outEn)())
 {
 }
 
-bool Arduboy2Audio::enabled()
+void ArduboyTones::tone(uint16_t freq, uint16_t dur)
 {
     assert(0);
+}
+
+bool Arduboy2Audio::enabled()
+{
     return false;
 }
 
