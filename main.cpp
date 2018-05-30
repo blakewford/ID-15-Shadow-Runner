@@ -3,6 +3,10 @@
 #include <assert.h>
 #include <fstream>
 
+#include <thread>
+#include <chrono>
+using namespace std::chrono;
+
 #include "SHRUN_AB.ino"
 
 float SCREEN_DATA[WIDTH*HEIGHT];
@@ -24,6 +28,13 @@ struct pgm
 
 pgm gScreen;
 uint64_t gFrame = 0;
+system_clock::time_point syncPoint;
+milliseconds gFrameRate = milliseconds(1000);
+
+bool inRange(int32_t x, int32_t y)
+{
+    return (x >= 0 && x < WIDTH) && (y >= 0 && y < HEIGHT);
+}
 
 float getPixel(const pgm& image, int32_t x, int32_t y)
 {
@@ -33,8 +44,11 @@ float getPixel(const pgm& image, int32_t x, int32_t y)
 
 void setPixel(const pgm& image, int32_t x, int32_t y, float value)
 {
-    int32_t index = (y*image.width)+x;
-    image.image[index] = value;
+    if(inRange(x, y))
+    {
+        int32_t index = (y*image.width)+x;
+        image.image[index] = value;
+    }
 }
 
 void writeImage(const pgm& image, const char* file)
@@ -85,28 +99,33 @@ void convertImage(const unsigned char* bitmap, const unsigned long int size, pgm
     }
 }
 
-void writeToScreen(const pgm image, int16_t x, int16_t y)
+void writeToScreen(const pgm& image, int16_t x, int16_t y)
 {
-    int16_t i = 0;
-    int16_t j = 0;
-    int32_t pixel = 0;
-    while(j < image.height)
+    if(inRange(x, y))
     {
-        while(i < image.width)
+        int16_t i = 0;
+        int16_t j = 0;
+        int32_t pixel = 0;
+        while(j < image.height)
         {
-            pixel = getPixel(image, i, j);
-            setPixel(gScreen, x+i, y+j, pixel);
-            i++;
+            while(i < image.width)
+            {
+                pixel = getPixel(image, i, j);
+                setPixel(gScreen, x+i, y+j, pixel);
+                i++;
+            }
+            i=0;
+            j++;
         }
-        i=0;
-        j++;
     }
 }
 
-void writeToScreen(const unsigned char* bitmap, const unsigned long int size, int16_t x, int16_t y)
+void writeToScreen(const unsigned char* bitmap, const unsigned long int size, int16_t x, int16_t y, uint8_t frame)
 {
     pgm item;
-    convertImage(bitmap, size, item);
+    int32_t offset = (bitmap[0]*bitmap[1])*frame;
+    convertImage(bitmap+offset, size, item);
+    item.height = bitmap[1];
     writeToScreen(item, x, y);
 
     delete[] item.image;
@@ -128,8 +147,8 @@ void delay(uint32_t ms)
 
 long random(long howsmall, long howbig)
 {
-    assert(0);
-    return 0;
+    long diff = howbig - howsmall;
+    return howsmall + (rand()%diff);
 }
 
 char* ltoa(long l, char * buffer, int radix)
@@ -143,6 +162,7 @@ void Arduboy2Base::begin()
 
 void Arduboy2Base::setFrameRate(uint8_t rate)
 {
+    gFrameRate = milliseconds(1000/rate);
 }
 
 void Arduboy2Base::initRandomSeed()
@@ -166,6 +186,13 @@ bool Arduboy2Base::collide(Rect rect1, Rect rect2)
 
 bool Arduboy2Base::nextFrame()
 {
+    while(system_clock::now() < syncPoint)
+    {
+//        std::this_thread::yield();
+        std::this_thread::sleep_for(nanoseconds(1));
+    }
+
+    syncPoint = system_clock::now() + gFrameRate;
     gFrame++;
     return true;
 }
@@ -198,7 +225,7 @@ void ArduboyTones::tone(uint16_t freq, uint16_t dur)
 
 bool Arduboy2Audio::enabled()
 {
-    return false;
+    return true;
 }
 
 void Arduboy2Audio::off()
@@ -238,11 +265,11 @@ unsigned long int getImageSize(const uint8_t *bitmap)
     }
     else if(bitmap == menuYesNo)
     {
-        size = sizeof(menuYesNo);
+        size = sizeof(menuYesNo); //Strange artifacts
     }
     else if(bitmap == menuShade)
     {
-        size = sizeof(menuShade);
+//        size = sizeof(menuShade); //Memory leak
     }
     else if(bitmap == menuInfo)
     {
@@ -274,7 +301,7 @@ unsigned long int getImageSize(const uint8_t *bitmap)
     }
     else if(bitmap == candleFlame)
     {
-        size = sizeof(candleFlame);
+//        size = sizeof(candleFlame);
     }
     else if(bitmap == candleTip)
     {
@@ -282,11 +309,11 @@ unsigned long int getImageSize(const uint8_t *bitmap)
     }
     else if(bitmap == shadowRunner)
     {
-        size = sizeof(shadowRunner);
+//        size = sizeof(shadowRunner);
     }
     else if(bitmap == shadowRunnerEyes)
     {
-        size = sizeof(shadowRunnerEyes);
+//        size = sizeof(shadowRunnerEyes);
     }
     else if(bitmap == heart)
     {
@@ -324,7 +351,7 @@ void Sprites::drawSelfMasked(int16_t x, int16_t y, const uint8_t *bitmap, uint8_
 {
     unsigned long int size = getImageSize(bitmap);
     if(size != 0)
-        writeToScreen(bitmap, size, x, y);
+        writeToScreen(bitmap, size, x, y, frame);
 }
 
 void Sprites::drawErase(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t frame)
@@ -335,9 +362,8 @@ void Sprites::drawErase(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t fra
         pgm mask;
         convertImage(bitmap, size, mask);
         memset(mask.image, 0, mask.width*mask.height*sizeof(float));
+        mask.height = bitmap[1];
         writeToScreen(mask, x, y);
-        delete[] mask.image;
-        mask.image = nullptr;
     }
 }
 
