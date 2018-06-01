@@ -269,7 +269,7 @@ unsigned long int getImageSize(const uint8_t *bitmap)
     }
     else if(bitmap == menuShade)
     {
-//        size = sizeof(menuShade); //Memory leak
+        size = sizeof(menuShade);
     }
     else if(bitmap == menuInfo)
     {
@@ -361,9 +361,11 @@ void Sprites::drawErase(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t fra
     {
         pgm mask;
         convertImage(bitmap, size, mask);
-        memset(mask.image, 0, mask.width*mask.height*sizeof(float));
+        memset(mask.image, 0, (mask.width*mask.height)*sizeof(float));
         mask.height = bitmap[1];
         writeToScreen(mask, x, y);
+        delete[] mask.image;
+        mask.image = nullptr;
     }
 }
 
