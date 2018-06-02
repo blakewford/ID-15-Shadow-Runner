@@ -118,6 +118,30 @@ void writeToScreen(const pgm& image, int16_t x, int16_t y)
     }
 }
 
+void eraseFromScreen(const pgm& image, int16_t x, int16_t y)
+{
+    if(inRange(x, y))
+    {
+        int16_t i = 0;
+        int16_t j = 0;
+        int32_t pixel = 0;
+        while(j < image.height)
+        {
+            while(i < image.width)
+            {
+                pixel = getPixel(image, i, j);
+                if(pixel != 0.0f)
+                {
+                    setPixel(gScreen, x+i, y+j, 0.0f);
+                }
+                i++;
+            }
+            i=0;
+            j++;
+        }
+    }
+}
+
 void writeToScreen(const unsigned char* bitmap, const unsigned long int size, int16_t x, int16_t y, uint8_t frame)
 {
     pgm item;
@@ -360,9 +384,8 @@ void Sprites::drawErase(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t fra
         pgm mask;
         int32_t offset = (bitmap[0]*bitmap[1])*frame;
         convertImage(bitmap+offset, bitmap[0], bitmap[1], size, mask);
-        memset(mask.image, 0, (mask.width*mask.height)*sizeof(float));
         mask.height = bitmap[1];
-        writeToScreen(mask, x, y);
+        eraseFromScreen(mask, x, y);
         delete[] mask.image;
         mask.image = nullptr;
     }
