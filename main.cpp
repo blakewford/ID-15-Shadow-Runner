@@ -68,33 +68,31 @@ void writeImage(const pgm& image, const char* file)
     stream.close();
 }
 
-void convertImage(const unsigned char* bitmap, const unsigned long int size, pgm& converted)
+void convertImage(const unsigned char* bitmap, const uint8_t width, const uint8_t height, const unsigned long int size, pgm& converted)
 {
-    converted.width  = bitmap[0];
-    converted.height = bitmap[1];
+    converted.width  = width;
+    converted.height = height;
     converted.image = new float[converted.width*converted.height];
 
     int8_t frames = size/((converted.width*converted.height)/8); //eight pixels per byte
 
     uint16_t i = 2; //offset past dimensions
+
+    uint16_t j = 0;
+    uint16_t k = 0;
     uint16_t pixel = 0;
-    while(frames--)
+    while(j < converted.height)
     {
-        uint16_t j = 0;
-        uint16_t k = 0;
-        while(j < converted.height)
+        while(k < converted.width)
         {
-            while(k < converted.width)
-            {
-                converted.image[pixel++] = (bitmap[i+k] & 1<<(j%8)) ? 255.0f: 0.0f;
-                k++;
-            }
-            k = 0;
-            j++;
-            if(j%8 == 0)
-            {
-                i+=converted.width;
-            }
+            converted.image[pixel++] = (bitmap[i+k] & 1<<(j%8)) ? 255.0f: 0.0f;
+            k++;
+        }
+        k = 0;
+        j++;
+        if(j%8 == 0)
+        {
+            i+=converted.width;
         }
     }
 }
@@ -124,7 +122,7 @@ void writeToScreen(const unsigned char* bitmap, const unsigned long int size, in
 {
     pgm item;
     int32_t offset = (bitmap[0]*bitmap[1])*frame;
-    convertImage(bitmap+offset, size, item);
+    convertImage(bitmap+offset, bitmap[0], bitmap[1], size, item);
     item.height = bitmap[1];
     writeToScreen(item, x, y);
 
@@ -265,7 +263,7 @@ unsigned long int getImageSize(const uint8_t *bitmap)
     }
     else if(bitmap == menuYesNo)
     {
-        size = sizeof(menuYesNo); //Strange artifacts
+        size = sizeof(menuYesNo);
     }
     else if(bitmap == menuShade)
     {
@@ -301,7 +299,7 @@ unsigned long int getImageSize(const uint8_t *bitmap)
     }
     else if(bitmap == candleFlame)
     {
-//        size = sizeof(candleFlame);
+        size = sizeof(candleFlame);
     }
     else if(bitmap == candleTip)
     {
@@ -309,11 +307,11 @@ unsigned long int getImageSize(const uint8_t *bitmap)
     }
     else if(bitmap == shadowRunner)
     {
-//        size = sizeof(shadowRunner);
+        size = sizeof(shadowRunner);
     }
     else if(bitmap == shadowRunnerEyes)
     {
-//        size = sizeof(shadowRunnerEyes);
+        size = sizeof(shadowRunnerEyes);
     }
     else if(bitmap == heart)
     {
@@ -360,7 +358,8 @@ void Sprites::drawErase(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t fra
     if(size != 0)
     {
         pgm mask;
-        convertImage(bitmap, size, mask);
+        int32_t offset = (bitmap[0]*bitmap[1])*frame;
+        convertImage(bitmap+offset, bitmap[0], bitmap[1], size, mask);
         memset(mask.image, 0, (mask.width*mask.height)*sizeof(float));
         mask.height = bitmap[1];
         writeToScreen(mask, x, y);
