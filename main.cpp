@@ -94,6 +94,39 @@ void convertImage(const unsigned char* bitmap, const uint8_t width, const uint8_
     }
 }
 
+void convertImageAndMask(const unsigned char* bitmap, const uint8_t width, const uint8_t height, pgm& converted, pgm& mask)
+{
+    converted.width  = width;
+    converted.height = height;
+    converted.image = new float[converted.width*converted.height];
+
+    mask.width  = width;
+    mask.height = height;
+    mask.image = new float[mask.width*mask.height];
+
+    uint16_t i = 2; //offset past dimensions
+
+    uint16_t j = 0;
+    uint16_t k = 0;
+    uint16_t pixel = 0;
+    while(j < converted.height)
+    {
+        while(k < (converted.width*2))
+        {
+            converted.image[pixel] = (bitmap[i+k] & 1<<(j%8)) ? 255.0f: 0.0f;
+            k++;
+            mask.image[pixel++] = (bitmap[i+k] & 1<<(j%8)) ? 255.0f: 0.0f;
+            k++;
+        }
+        k = 0;
+        j++;
+        if(j%8 == 0)
+        {
+            i+=(converted.width*2);
+        }
+    }
+}
+
 bool clipImage(pgm& modified, int16_t x, int16_t y)
 {
     if((x >= WIDTH) || (y >= HEIGHT))
@@ -195,8 +228,9 @@ void writeToScreen(const unsigned char* bitmap, int16_t x, int16_t y, uint8_t fr
 void maskToScreen(const unsigned char* bitmap, int16_t x, int16_t y, uint8_t frame)
 {
     pgm item;
+    pgm mask;
     int32_t offset = ((bitmap[0]*bitmap[1])*frame)*2;
-    assert(0);
+    convertImageAndMask(bitmap+offset, bitmap[0], bitmap[1], item, mask);
 }
 
 int main()
@@ -220,7 +254,10 @@ long random(long howsmall, long howbig)
 
 char* ltoa(long l, char * buffer, int radix)
 {
-    assert(0);
+    if(radix != 10) assert(0);
+
+    sprintf(buffer, "%ld", l);
+    return buffer;
 }
 
 void Arduboy2Base::begin()
@@ -248,7 +285,6 @@ bool Arduboy2Base::justPressed(uint8_t button)
 
 bool Arduboy2Base::collide(Rect rect1, Rect rect2)
 {
-    assert(0);
     return false;
 }
 
@@ -402,6 +438,10 @@ unsigned long int getImageSize(const uint8_t *bitmap)
     else if(bitmap == backGrounds)
     {
         size = sizeof(backGrounds);
+    }
+    else if(bitmap == forgroundTrees)
+    {
+        size = sizeof(forgroundTrees);
     }
     else if(bitmap == fences_plus_mask)
     {
