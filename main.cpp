@@ -67,13 +67,11 @@ void writeImage(const pgm& image, const char* file)
     stream.close();
 }
 
-void convertImage(const unsigned char* bitmap, const uint8_t width, const uint8_t height, const unsigned long int size, pgm& converted)
+void convertImage(const unsigned char* bitmap, const uint8_t width, const uint8_t height, pgm& converted)
 {
     converted.width  = width;
     converted.height = height;
     converted.image = new float[converted.width*converted.height];
-
-    int8_t frames = size/((converted.width*converted.height)/8); //eight pixels per byte
 
     uint16_t i = 2; //offset past dimensions
 
@@ -182,16 +180,23 @@ void eraseFromScreen(const pgm& image, int16_t x, int16_t y)
     }
 }
 
-void writeToScreen(const unsigned char* bitmap, const unsigned long int size, int16_t x, int16_t y, uint8_t frame)
+void writeToScreen(const unsigned char* bitmap, int16_t x, int16_t y, uint8_t frame)
 {
     pgm item;
     int32_t offset = (bitmap[0]*bitmap[1])*frame;
-    convertImage(bitmap+offset, bitmap[0], bitmap[1], size, item);
+    convertImage(bitmap+offset, bitmap[0], bitmap[1], item);
     item.height = bitmap[1];
     writeToScreen(item, x, y);
 
     delete[] item.image;
     item.image = nullptr;
+}
+
+void maskToScreen(const unsigned char* bitmap, int16_t x, int16_t y, uint8_t frame)
+{
+    pgm item;
+    int32_t offset = ((bitmap[0]*bitmap[1])*frame)*2;
+    assert(0);
 }
 
 int main()
@@ -414,7 +419,9 @@ void Sprites::drawSelfMasked(int16_t x, int16_t y, const uint8_t *bitmap, uint8_
 {
     unsigned long int size = getImageSize(bitmap);
     if(size != 0)
-        writeToScreen(bitmap, size, x, y, frame);
+    {
+        writeToScreen(bitmap, x, y, frame);
+    }
 }
 
 void Sprites::drawErase(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t frame)
@@ -424,7 +431,7 @@ void Sprites::drawErase(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t fra
     {
         pgm mask;
         int32_t offset = (bitmap[0]*bitmap[1])*frame;
-        convertImage(bitmap+offset, bitmap[0], bitmap[1], size, mask);
+        convertImage(bitmap+offset, bitmap[0], bitmap[1], mask);
         mask.height = bitmap[1];
         eraseFromScreen(mask, x, y);
         delete[] mask.image;
@@ -434,5 +441,9 @@ void Sprites::drawErase(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t fra
 
 void Sprites::drawPlusMask(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t frame)
 {
-    assert(0);
+    unsigned long int size = getImageSize(bitmap)/2;
+    if(size != 0)
+    {
+        maskToScreen(bitmap, x, y, frame);
+    }
 }
