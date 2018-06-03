@@ -44,11 +44,10 @@ float getPixel(const pgm& image, int32_t x, int32_t y)
 
 void setPixel(const pgm& image, int32_t x, int32_t y, float value)
 {
-    if(inRange(x, y))
-    {
-        int32_t index = (y*image.width)+x;
-        image.image[index] = value;
-    }
+    if(!inRange(x, y)) return;
+
+    int32_t index = (y*image.width)+x;
+    image.image[index] = value;
 }
 
 void writeImage(const pgm& image, const char* file)
@@ -97,48 +96,89 @@ void convertImage(const unsigned char* bitmap, const uint8_t width, const uint8_
     }
 }
 
+bool clipImage(pgm& modified, int16_t x, int16_t y)
+{
+    if((x >= WIDTH) || (y >= HEIGHT))
+    {
+        return false;
+    }
+
+    bool canClip = false;
+
+    int16_t visibleX = 0;
+    int16_t visibleY = 0;
+    if(x < 0)
+    {
+        visibleX = x+modified.width;
+        if(visibleX < 0) return false;
+
+        modified.width = visibleX;
+        canClip = true;
+    }
+
+    if(y < 0)
+    {
+        visibleY = y+modified.height;
+        if(visibleY < 0)
+        {
+            return false;
+        }
+
+        modified.height = visibleY;
+        canClip = true;
+    }
+
+    return canClip;
+}
+
 void writeToScreen(const pgm& image, int16_t x, int16_t y)
 {
-    if(inRange(x, y))
+    int16_t i = 0;
+    int16_t j = 0;
+    int32_t pixel = 0;
+
+    pgm modified = image;
+    if(!inRange(x, y))
     {
-        int16_t i = 0;
-        int16_t j = 0;
-        int32_t pixel = 0;
-        while(j < image.height)
+        if(!clipImage(modified, x, y)) return;
+    }
+
+    while(j < modified.height)
+    {
+        while(i < modified.width)
         {
-            while(i < image.width)
+            pixel = getPixel(modified, i, j);
+            if(pixel != 0.0f)
             {
-                pixel = getPixel(image, i, j);
                 setPixel(gScreen, x+i, y+j, pixel);
-                i++;
             }
-            i=0;
-            j++;
+            i++;
         }
+        i=0;
+        j++;
     }
 }
 
 void eraseFromScreen(const pgm& image, int16_t x, int16_t y)
 {
-    if(inRange(x, y))
+    if(!inRange(x, y)) return;
+
+    int16_t i = 0;
+    int16_t j = 0;
+    int32_t pixel = 0;
+    while(j < image.height)
     {
-        int16_t i = 0;
-        int16_t j = 0;
-        int32_t pixel = 0;
-        while(j < image.height)
+        while(i < image.width)
         {
-            while(i < image.width)
+            pixel = getPixel(image, i, j);
+            if(pixel != 0.0f)
             {
-                pixel = getPixel(image, i, j);
-                if(pixel != 0.0f)
-                {
-                    setPixel(gScreen, x+i, y+j, 0.0f);
-                }
-                i++;
+                setPixel(gScreen, x+i, y+j, 0.0f);
             }
-            i=0;
-            j++;
+            i++;
         }
+        i=0;
+        j++;
     }
 }
 
@@ -198,6 +238,7 @@ bool Arduboy2Base::everyXFrames(uint8_t frames)
 
 bool Arduboy2Base::justPressed(uint8_t button)
 {
+    return false;
 }
 
 bool Arduboy2Base::collide(Rect rect1, Rect rect2)
