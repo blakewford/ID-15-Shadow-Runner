@@ -243,7 +243,7 @@ int main()
 
 void delay(uint32_t ms)
 {
-    assert(0);
+    std::this_thread::sleep_for(milliseconds(ms));
 }
 
 long random(long howsmall, long howbig)
@@ -285,7 +285,7 @@ bool Arduboy2Base::justPressed(uint8_t button)
 
 bool Arduboy2Base::collide(Rect rect1, Rect rect2)
 {
-    return false;
+  return !(rect2.x >= rect1.x + rect1.width || rect2.x + rect2.width <= rect1.x || rect2.y >= rect1.y + rect1.height || rect2.y + rect2.height <= rect1.y);
 }
 
 bool Arduboy2Base::nextFrame()
@@ -324,7 +324,6 @@ ArduboyTones::ArduboyTones(bool (*outEn)())
 
 void ArduboyTones::tone(uint16_t freq, uint16_t dur)
 {
-    assert(0);
 }
 
 bool Arduboy2Audio::enabled()
