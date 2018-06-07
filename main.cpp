@@ -138,6 +138,8 @@ bool clipImage(pgm& modified, int16_t x, int16_t y)
 
     int16_t visibleX = 0;
     int16_t visibleY = 0;
+    int16_t originalWidth = modified.width;
+    int16_t originalHeight = modified.height;
     if(x < 0)
     {
         visibleX = x+modified.width;
@@ -159,6 +161,12 @@ bool clipImage(pgm& modified, int16_t x, int16_t y)
         canClip = true;
     }
 
+    if(canClip)
+    {
+        int16_t start = originalWidth-visibleX;
+        int16_t diffX = originalHeight-visibleY;
+    }
+
     return canClip;
 }
 
@@ -168,20 +176,24 @@ void writeToScreen(const pgm& image, int16_t x, int16_t y)
     int16_t j = 0;
     int32_t pixel = 0;
 
+    int16_t offsetX = 0;
+    int16_t offsetY = 0;
     pgm modified = image;
     if(!inRange(x, y))
     {
         if(!clipImage(modified, x, y)) return;
+        offsetX = image.width - modified.width;
+        offsetY = image.height - modified.height;
     }
 
     while(j < modified.height)
     {
         while(i < modified.width)
         {
-            pixel = getPixel(modified, i, j);
+            pixel = getPixel(image, i+offsetX, j+offsetY);
             if(pixel != 0.0f)
             {
-                setPixel(gScreen, x+i, y+j, pixel);
+                setPixel(gScreen, offsetX+x+i, offsetY+y+j, pixel);
             }
             i++;
         }
