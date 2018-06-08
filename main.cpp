@@ -9,6 +9,8 @@ using namespace std::chrono;
 
 #include "SHRUN_AB.ino"
 
+bool gKeepGoing = true;
+const int32_t SCALE = 8;
 float SCREEN_DATA[WIDTH*HEIGHT];
 
 struct pgm
@@ -277,14 +279,6 @@ void maskToScreen(const unsigned char* bitmap, int16_t x, int16_t y, uint8_t fra
     mask.image = nullptr;
 }
 
-int main()
-{
-    arduboy.clear();
-    setup();
-    while(true)
-        loop();
-}
-
 void delay(uint32_t ms)
 {
     std::this_thread::sleep_for(milliseconds(ms));
@@ -359,7 +353,7 @@ void Arduboy2Base::clear()
 
 void Arduboy2Base::display()
 {
-    writeImage(gScreen, "test.pgm");
+//    writeImage(gScreen, "test.pgm");
 }
 
 ArduboyTones::ArduboyTones(bool (*outEn)())
@@ -528,5 +522,109 @@ void Sprites::drawPlusMask(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t 
     if(size != 0)
     {
         maskToScreen(bitmap, x, y, frame);
+    }
+}
+
+#include <SDL.h>
+
+struct SDL_Components
+{
+    SDL_Window* w;
+    SDL_Texture* t;
+    SDL_Renderer* r;
+};
+
+SDL_Components gComponents;
+
+int32_t SDL_Init()
+{
+    if(SDL_Init(SDL_INIT_EVERYTHING) < 0) return -1;
+
+    gComponents.w = SDL_CreateWindow("Arduboy", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH*SCALE, HEIGHT*SCALE, SDL_WINDOW_SHOWN);
+    if(gComponents.w == nullptr) return -1;
+
+    gComponents.r = SDL_CreateRenderer(gComponents.w, -1, 0);
+    if(gComponents.r == nullptr) return -1;
+
+    SDL_RenderSetScale(gComponents.r, SCALE, SCALE);
+
+    SDL_Surface* s = SDL_CreateRGBSurface(0, WIDTH, HEIGHT, sizeof(uint32_t), 0, 0, 0, 0);
+    if(s == nullptr) return -1;
+
+    gComponents.t = SDL_CreateTextureFromSurface(gComponents.r, s);
+    if(gComponents.t == nullptr) return -1;
+
+    SDL_FreeSurface(s);
+
+    return 0;
+}
+
+void SDL_Destroy()
+{
+    SDL_DestroyRenderer(gComponents.r);
+    SDL_DestroyWindow(gComponents.w);
+    SDL_Quit();
+}
+
+const uint32_t SDL_BLACK = 0x00000000;
+const uint32_t SDL_WHITE = 0x00FFFFFF;
+
+void* RenderThread(void* buffer)
+{
+    SDL_Event e;
+    uint32_t* p = (uint32_t*)buffer;
+
+    int32_t j = 0;
+    int32_t i = (gScreen.height*gScreen.width);
+    while(i--)
+    {
+        p[j] = gScreen.image[j] == 0.0f ? SDL_BLACK: SDL_WHITE;
+        j++;
+    }
+
+    SDL_UpdateTexture(gComponents.t, nullptr, p, WIDTH*sizeof(uint32_t));
+    SDL_RenderClear(gComponents.r);
+    SDL_RenderCopy(gComponents.r, gComponents.t, nullptr, nullptr);
+    SDL_RenderPresent(gComponents.r);
+    while(SDL_PollEvent(&e) != 0)
+    {
+        if(e.type == SDL_QUIT)
+        {
+            SDL_Destroy();
+            gKeepGoing = false;
+            return nullptr;
+        }
+        else if(e.type == SDL_KEYDOWN)
+        {
+            switch(e.key.keysym.sym)
+            {
+                case SDLK_UP:
+                    break;
+                case SDLK_LEFT:
+                    break;
+                case SDLK_DOWN:
+                    break;
+                case SDLK_RIGHT:
+                    break;
+                case SDLK_a:
+                    break;
+                case SDLK_b:
+                    break;
+            }
+        }
+    }
+}
+
+int main()
+{
+    arduboy.clear();
+    if(SDL_Init() < 0) return -1;
+    uint32_t texture[WIDTH*HEIGHT];
+
+    setup();
+    while(gKeepGoing)
+    {
+        loop();
+        RenderThread(texture);
     }
 }
