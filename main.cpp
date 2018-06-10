@@ -410,10 +410,47 @@ ArduboyTones::ArduboyTones(bool (*outEn)())
 {
 }
 
+#include <SDL.h>
+
+struct audioSample
+{
+	SDL_AudioSpec spec;
+	uint32_t length;
+	uint8_t* buffer;
+};
+
+audioSample gSamples[3];
+
 void ArduboyTones::tone(uint16_t freq, uint16_t dur)
 {
     assert(freq >= 16 && freq <= 32767);
     assert(dur < (uint16_t)~0);
+
+    int8_t ndx = -1;
+    switch(freq)
+    {
+        case 175:
+            ndx = 0;
+            break;
+        case 523:
+            ndx = 1;
+            break;
+        case 750:
+            ndx = 2;
+            break;
+        default:
+            return;
+    }
+
+    SDL_AudioDeviceID dev = SDL_OpenAudioDevice(nullptr, 0, &gSamples[ndx].spec, nullptr, 0);
+    if(dev < 0) return;
+
+    if(SDL_QueueAudio(dev, gSamples[ndx].buffer, gSamples[ndx].length) != 0) return;
+
+    SDL_PauseAudioDevice(dev, 0);
+    SDL_Delay(dur);
+
+    SDL_CloseAudioDevice(dev);
 }
 
 bool gAudioEnabled = true;
@@ -578,8 +615,6 @@ void Sprites::drawPlusMask(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t 
     }
 }
 
-#include <SDL.h>
-
 struct SDL_Components
 {
     SDL_Window* w;
@@ -591,7 +626,10 @@ SDL_Components gComponents;
 
 int32_t SDL_Init()
 {
-    if(SDL_Init(SDL_INIT_EVERYTHING) < 0) return -1;
+    if(SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) < 0) return -1;
+    SDL_LoadWAV("175.wav", &gSamples[0].spec, &gSamples[0].buffer, &gSamples[0].length);
+    SDL_LoadWAV("523.wav", &gSamples[1].spec, &gSamples[1].buffer, &gSamples[1].length);
+    SDL_LoadWAV("750.wav", &gSamples[2].spec, &gSamples[2].buffer, &gSamples[2].length);
 
     gComponents.w = SDL_CreateWindow("Arduboy", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH*SCALE, HEIGHT*SCALE, SDL_WINDOW_SHOWN);
     if(gComponents.w == nullptr) return -1;
@@ -614,6 +652,10 @@ int32_t SDL_Init()
 
 void SDL_Destroy()
 {
+    SDL_FreeWAV(gSamples[0].buffer);
+    SDL_FreeWAV(gSamples[1].buffer);
+    SDL_FreeWAV(gSamples[2].buffer);
+
     SDL_DestroyTexture(gComponents.t);
     SDL_DestroyRenderer(gComponents.r);
     SDL_DestroyWindow(gComponents.w);
