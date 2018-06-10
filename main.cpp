@@ -316,9 +316,57 @@ bool Arduboy2Base::everyXFrames(uint8_t frames)
     return gFrame%frames == 0;
 }
 
+struct buttonState
+{
+    bool upButton = false;
+    bool leftButton = false;
+    bool downButton = false;
+    bool rightButton = false;
+    bool buttonA = false;
+    bool buttonB = false;
+
+    void clear()
+    {
+        upButton = false;
+        leftButton = false;
+        downButton = false;
+        rightButton = false;
+        buttonA = false;
+        buttonB = false;
+    }
+};
+
+buttonState gButtonState;
+buttonState gCachedButtonState;
+
 bool Arduboy2Base::justPressed(uint8_t button)
 {
-    return false;
+    bool pressed = false;
+    switch(button)
+    {
+        case LEFT_BUTTON:
+            pressed = gCachedButtonState.leftButton;
+            break;
+        case RIGHT_BUTTON:
+            pressed = gCachedButtonState.rightButton;
+            break;
+        case UP_BUTTON:
+            pressed = gCachedButtonState.upButton;
+            break;
+        case DOWN_BUTTON:
+            pressed = gCachedButtonState.downButton;
+            break;
+        case A_BUTTON:
+            pressed = gCachedButtonState.buttonA;
+            break;
+        case B_BUTTON:
+            pressed = gCachedButtonState.buttonB;
+            break;
+        default:
+            break;
+    }
+
+    return pressed;
 }
 
 bool Arduboy2Base::collide(Rect rect1, Rect rect2)
@@ -341,6 +389,8 @@ bool Arduboy2Base::nextFrame()
 
 void Arduboy2Base::pollButtons()
 {
+    gCachedButtonState = gButtonState;
+    gButtonState.clear();
 }
 
 void Arduboy2Base::clear()
@@ -362,26 +412,29 @@ ArduboyTones::ArduboyTones(bool (*outEn)())
 
 void ArduboyTones::tone(uint16_t freq, uint16_t dur)
 {
+    assert(freq >= 16 && freq <= 32767);
+    assert(dur < (uint16_t)~0);
 }
+
+bool gAudioEnabled = true;
 
 bool Arduboy2Audio::enabled()
 {
-    return true;
+    return gAudioEnabled;
 }
 
 void Arduboy2Audio::off()
 {
-    assert(0);
+    gAudioEnabled = false;
 }
 
 void Arduboy2Audio::on()
 {
-    assert(0);
+    gAudioEnabled = true;
 }
 
 void Arduboy2Audio::saveOnOff()
 {
-    assert(0);
 }
 
 unsigned long int getImageSize(const uint8_t *bitmap)
@@ -561,6 +614,7 @@ int32_t SDL_Init()
 
 void SDL_Destroy()
 {
+    SDL_DestroyTexture(gComponents.t);
     SDL_DestroyRenderer(gComponents.r);
     SDL_DestroyWindow(gComponents.w);
     SDL_Quit();
@@ -599,16 +653,22 @@ void* RenderThread(void* buffer)
             switch(e.key.keysym.sym)
             {
                 case SDLK_UP:
+                    gButtonState.upButton = true;
                     break;
                 case SDLK_LEFT:
+                    gButtonState.leftButton = true;
                     break;
                 case SDLK_DOWN:
+                    gButtonState.downButton = true;
                     break;
                 case SDLK_RIGHT:
+                    gButtonState.rightButton = true;
                     break;
                 case SDLK_a:
+                    gButtonState.buttonA = true;
                     break;
                 case SDLK_b:
+                    gButtonState.buttonB = true;
                     break;
             }
         }
