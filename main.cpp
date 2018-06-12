@@ -426,29 +426,27 @@ void ArduboyTones::tone(uint16_t freq, uint16_t dur)
     assert(freq >= 16 && freq <= 32767);
     assert(dur < (uint16_t)~0);
 
-    int8_t ndx = -1;
-    switch(freq)
-    {
-        case 175:
-            ndx = 0;
-            break;
-        case 523:
-            ndx = 1;
-            break;
-        case 750:
-            ndx = 2;
-            break;
-        default:
-            return;
-    }
-
-    SDL_AudioDeviceID dev = SDL_OpenAudioDevice(nullptr, 0, &gSamples[ndx].spec, nullptr, 0);
+    SDL_AudioDeviceID dev = SDL_OpenAudioDevice(nullptr, 0, &gSamples[0].spec, nullptr, 0);
     if(dev < 0) return;
 
-    if(SDL_QueueAudio(dev, gSamples[ndx].buffer, gSamples[ndx].length) != 0) return;
+//  Hack alert
+    assert(freq <= 1024);
+    const int32_t range = (1024-freq);
+
+    int32_t count = range*2;
+    uint8_t* wav = new uint8_t[count];
+    while(count-- > (1024-freq))
+        wav[count] = 255;
+    while(count--)
+        wav[count] = 50;
+    count = dur/2;
+    while(count--)
+         if(SDL_QueueAudio(dev, wav, range*2) != 0) return;
+//
 
     SDL_PauseAudioDevice(dev, 0);
     SDL_Delay(dur);
+    delete[] wav;
 
     SDL_CloseAudioDevice(dev);
 }
