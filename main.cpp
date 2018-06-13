@@ -247,25 +247,33 @@ void writeToScreen(const unsigned char* bitmap, int16_t x, int16_t y, uint8_t fr
 
 void maskToScreen(const unsigned char* bitmap, int16_t x, int16_t y, uint8_t frame)
 {
-    if(!inRange(x, y)) return;
-
     pgm item;
     pgm mask;
     int32_t offset = (((bitmap[0]*bitmap[1])*frame)*2)/8;
     convertImageAndMask(bitmap+offset, bitmap[0], bitmap[1], item, mask);
 
+    int16_t offsetX = 0;
+    int16_t offsetY = 0;
+    pgm modified = item;
+    if(!inRange(x, y))
+    {
+        if(!clipImage(modified, x, y)) return;
+        offsetX = item.width - modified.width;
+        offsetY = item.height - modified.height;
+    }
+
     int16_t i = 0;
     int16_t j = 0;
     int32_t pixel = 0;
-    while(j < item.height)
+    while(j < modified.height)
     {
-        while(i < item.width)
+        while(i < modified.width)
         {
-            pixel = getPixel(mask, i, j);
+            pixel = getPixel(mask, i+offsetX, j+offsetY);
             if(pixel != 0.0f)
             {
-                pixel = getPixel(item, i, j);
-                setPixel(gScreen, x+i, y+j, pixel);
+                pixel = getPixel(item, i+offsetX, j+offsetY);
+                setPixel(gScreen, offsetX+x+i, offsetY+y+j, pixel);
             }
             i++;
         }
