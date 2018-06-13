@@ -30,7 +30,8 @@ struct pgm
 
 pgm gScreen;
 uint64_t gFrame = 0;
-system_clock::time_point syncPoint;
+system_clock::time_point gSyncPoint;
+system_clock::time_point gAudioSyncPoint;
 milliseconds gFrameRate = milliseconds(1000);
 
 bool inRange(int32_t x, int32_t y)
@@ -376,14 +377,15 @@ bool Arduboy2Base::collide(Rect rect1, Rect rect2)
 
 bool Arduboy2Base::nextFrame()
 {
-    while(system_clock::now() < syncPoint)
+    while(system_clock::now() < gSyncPoint)
     {
 //        std::this_thread::yield();
         std::this_thread::sleep_for(nanoseconds(1));
     }
 
-    syncPoint = system_clock::now() + gFrameRate;
+    gSyncPoint = system_clock::now() + gFrameRate;
     gFrame++;
+
     return true;
 }
 
@@ -412,43 +414,39 @@ ArduboyTones::ArduboyTones(bool (*outEn)())
 
 #include <SDL.h>
 
-struct audioSample
-{
-	SDL_AudioSpec spec;
-	uint32_t length;
-	uint8_t* buffer;
-};
-
-audioSample gSamples[3];
+SDL_AudioDeviceID gAudioDevice = ~0;
+SDL_AudioSpec gAudioSpec = {.freq=44100, .format=32784, .channels=2, .silence=0, .samples=4096, .padding=0, .size=0, .callback=nullptr, .userdata=nullptr};
 
 void ArduboyTones::tone(uint16_t freq, uint16_t dur)
 {
+    if(system_clock::now() < gAudioSyncPoint) return; //busy
+
     assert(freq >= 16 && freq <= 32767);
     assert(dur < (uint16_t)~0);
 
-    SDL_AudioDeviceID dev = SDL_OpenAudioDevice(nullptr, 0, &gSamples[0].spec, nullptr, 0);
-    if(dev < 0) return;
+    if(gAudioDevice < 0) return;
 
-//  Hack alert
-    assert(freq <= 1024);
-    const int32_t range = (1024-freq);
+    const int32_t scale = (gAudioSpec.freq/freq);
 
-    int32_t count = range*2;
+    int32_t count = scale*2;
     uint8_t* wav = new uint8_t[count];
-    while(count-- > (1024-freq))
+    while(count-- > scale)
         wav[count] = 255;
     while(count--)
         wav[count] = 50;
-    count = dur/2;
+
+    count = ((gAudioSpec.freq/1000)*dur)/(scale*2);
     while(count--)
-         if(SDL_QueueAudio(dev, wav, range*2) != 0) return;
-//
+    {
+        if(SDL_QueueAudio(gAudioDevice, wav, scale*2) != 0)
+        {
+            break;
+        }
+    }
 
-    SDL_PauseAudioDevice(dev, 0);
-    SDL_Delay(dur);
+    SDL_PauseAudioDevice(gAudioDevice, 0);
+    gAudioSyncPoint = system_clock::now() + milliseconds(200);
     delete[] wav;
-
-    SDL_CloseAudioDevice(dev);
 }
 
 bool gAudioEnabled = true;
@@ -625,9 +623,8 @@ SDL_Components gComponents;
 int32_t SDL_Init()
 {
     if(SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) < 0) return -1;
-    SDL_LoadWAV("175.wav", &gSamples[0].spec, &gSamples[0].buffer, &gSamples[0].length);
-    SDL_LoadWAV("523.wav", &gSamples[1].spec, &gSamples[1].buffer, &gSamples[1].length);
-    SDL_LoadWAV("750.wav", &gSamples[2].spec, &gSamples[2].buffer, &gSamples[2].length);
+
+    gAudioDevice = SDL_OpenAudioDevice(nullptr, 0, &gAudioSpec, nullptr, 0);
 
     gComponents.w = SDL_CreateWindow("Arduboy", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH*SCALE, HEIGHT*SCALE, SDL_WINDOW_SHOWN);
     if(gComponents.w == nullptr) return -1;
@@ -650,9 +647,7 @@ int32_t SDL_Init()
 
 void SDL_Destroy()
 {
-    SDL_FreeWAV(gSamples[0].buffer);
-    SDL_FreeWAV(gSamples[1].buffer);
-    SDL_FreeWAV(gSamples[2].buffer);
+    SDL_CloseAudioDevice(gAudioDevice);
 
     SDL_DestroyTexture(gComponents.t);
     SDL_DestroyRenderer(gComponents.r);
