@@ -7,7 +7,7 @@
 #include <chrono>
 using namespace std::chrono;
 
-#include "SHRUN_AB.ino"
+#include "SHRUN_AB/SHRUN_AB.ino"
 
 bool gKeepGoing = true;
 const int32_t SCALE = 8;
