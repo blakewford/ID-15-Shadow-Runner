@@ -55,5 +55,6 @@ void loop() {
   ((FunctionPointer)(mainGameLoop[gameState]))();
 #endif
   arduboy.display();
+  gameState = STATE_GAME_PLAYING;
 }
 
