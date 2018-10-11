@@ -22,8 +22,8 @@ void drawScore(int scoreX, int scoreY)
 {
   sprites.drawSelfMasked(scoreX, scoreY, score, 0);
   char buf[8];
-  ltoa(scorePlayer, buf, 10); // Numerical base used to represent the value as a string, between 2 and 36, where 10 means decimal base
-  char charLen = strlen(buf);
+  ltoa_compat(scorePlayer, buf, 10); // Numerical base used to represent the value as a string, between 2 and 36, where 10 means decimal base
+  char charLen = 1;
   char pad = 8 - charLen;
 
   //draw 0 padding

@@ -34,6 +34,6 @@ enum
 #define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
 #define bitWrite(value, bit, bitvalue) (bitvalue ? bitSet(value, bit) : bitClear(value, bit))
 
-char* ltoa(long l, char * buffer, int radix);
+char* ltoa_compat(long l, char * buffer, int radix);
 
 #define pgm_read_word
