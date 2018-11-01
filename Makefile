@@ -1,6 +1,9 @@
 runner: main.cpp
 	g++ -gdwarf-4 -std=c++11 main.cpp -o $@ -I. -DPROGMEM= -include port.h -Wno-narrowing -fpermissive
 
+x86-runner: main.cpp
+	g++ -m32 -gdwarf-4 -std=c++11 main.cpp -o $@ -I. -DPROGMEM= -include port.h -Wno-narrowing -fpermissive
+
 avr-runner: main.cpp
 	avr-g++ -gdwarf-4 -std=c++11 main.cpp -o $@ -I. -include port.h -include avr/pgmspace.h -Wno-narrowing -fpermissive -mmcu=atmega32u4
 
