@@ -119,3 +119,10 @@ int main()
         loop();
     }
 }
+
+#ifdef __arm__
+extern "C" void _start()
+{
+    main();
+}
+#endif
