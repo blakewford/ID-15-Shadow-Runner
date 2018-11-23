@@ -99,7 +99,7 @@ void drawFence()
   }
 }
 
-drawForGround()
+void drawForGround()
 {
   if (forgroundstep == 128) forgroundid = random(0, 3);
   sprites.drawErase(forgroundstep, -4, forgroundTrees, forgroundid);
@@ -110,7 +110,7 @@ drawForGround()
   if (forgroundstep < -255) forgroundstep = 128;
 }
 
-drawScoreAndLive()
+void drawScoreAndLive()
 {
   if (arduboy.everyXFrames(16 - 2 * level))
   {
@@ -125,7 +125,7 @@ drawScoreAndLive()
   drawScore(59, 52);
 }
 
-checkScoreAndLevel()
+void checkScoreAndLevel()
 {
   if (nextLevelAt < scorePlayer)
   {

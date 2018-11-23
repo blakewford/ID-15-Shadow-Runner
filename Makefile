@@ -1,6 +1,9 @@
 runner: main.cpp
 	g++ -gdwarf-4 -std=c++11 main.cpp -o $@ -I. -DPROGMEM= -include port.h -Wno-narrowing -fpermissive
 
+clang-runner: main.cpp
+	clang++ -gdwarf-4 -O3 -std=c++11 main.cpp -o $@ -I. -DPROGMEM= -include port.h -Wno-narrowing -fpermissive
+
 x86-runner: main.cpp
 	g++ -m32 -gdwarf-4 -std=c++11 main.cpp -o $@ -I. -DPROGMEM= -include port.h -Wno-narrowing -fpermissive
 
@@ -14,4 +17,4 @@ aarch64-runner: main.cpp
 	aarch64-linux-gnu-g++ -gdwarf-4 -std=c++11 main.cpp -o $@ -I. -DPROGMEM= -include port.h -Wno-narrowing -fpermissive
 
 clean:
-	rm avr-runner runner arm-runner aarch64-runner
+	rm avr-runner runner arm-runner aarch64-runner clang-runner
