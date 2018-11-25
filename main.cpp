@@ -120,7 +120,14 @@ int main()
     }
 }
 
-#ifdef __arm__
+#if defined(__mips__)
+extern "C" void __start()
+{
+    main();
+}
+#endif
+
+#if defined(__arm__) || defined (__powerpc__)
 extern "C" void _start()
 {
     main();
