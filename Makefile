@@ -5,10 +5,10 @@ clang-runner: main.cpp
 	clang++ -gdwarf-4 -std=c++11 main.cpp -o $@ -I. -DPROGMEM= -include port.h -Wno-narrowing -fpermissive
 
 ppc-runner: main.cpp
-	powerpc-linux-gnu-g++ -gdwarf-4 -std=c++11 main.cpp -o $@ -I. -DPROGMEM= -include port.h -Wno-narrowing -fpermissive
+	powerpc-linux-gnu-g++ -gdwarf-4 -std=c++11 -nostdlib main.cpp -o $@ -I. -DPROGMEM= -include port.h -Wno-narrowing -fpermissive
 
 mips-runner: main.cpp
-	mips-linux-gnu-g++ -gdwarf-4 -std=c++11 main.cpp -o $@ -I. -DPROGMEM= -include port.h -Wno-narrowing -fpermissive
+	mips-linux-gnu-g++ -gdwarf-4 -std=c++11 -nostdlib main.cpp -o $@ -I. -DPROGMEM= -include port.h -Wno-narrowing -fpermissive
 
 x86-runner: main.cpp
 	g++ -m32 -gdwarf-4 -std=c++11 main.cpp -o $@ -I. -DPROGMEM= -include port.h -Wno-narrowing -fpermissive
