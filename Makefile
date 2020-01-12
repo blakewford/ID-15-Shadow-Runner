@@ -25,5 +25,5 @@ aarch64-runner: main.cpp
 clean:
 	rm avr-runner runner arm-runner aarch64-runner clang-runner ppc-runner mips-runner
 
-CC=~/build/bin/clang
+CC=clang
 Target=x86_64-pc-linux-gnu

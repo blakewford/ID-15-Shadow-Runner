@@ -23,6 +23,7 @@
 #include "items.h"
 #include "playfield.h"
 
+#include "stdlib.h"
 
 typedef void (*FunctionPointer) ();
 
@@ -45,6 +46,7 @@ void setup () {
   arduboy.initRandomSeed();
 }
 
+uint8_t shouldBreak = 255;
 void loop() {
   if (!(arduboy.nextFrame())) return;
   arduboy.pollButtons();
@@ -56,5 +58,13 @@ void loop() {
 #endif
   arduboy.display();
   gameState = STATE_GAME_PLAYING;
+  if(shouldBreak-- == 0)
+  {
+#ifdef __AVR__
+      asm("BREAK");
+#else
+      exit(0);
+#endif
+  }
 }
 
