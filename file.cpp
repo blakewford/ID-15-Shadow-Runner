@@ -3,17 +3,8 @@
 #include <stdint.h>
 #include <thread>
 
-#include "SHRUN_AB/SHRUN_AB.ino"
+#include "SHRUN_AB.ino"
 
-struct test
-{
-   test()
-   {
-      std::this_thread::sleep_for(std::chrono::seconds(1));
-   }
-};
-
-static test t;
 
 bool gKeepGoing = true;
 

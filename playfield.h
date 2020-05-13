@@ -158,13 +158,41 @@ void checkInputs()
 
 void checkCollisions()
 {
-  Rect runnerRect = {.x = runnerX + 8, .y = runnerY + 2, .width = 10, .height = 20};
+  Rect runnerRect;
+  runnerRect.x = runnerX + 8;
+  runnerRect.y = runnerY + 2;
+  runnerRect.width = 10;
+  runnerRect.height = 20;
 
-  Rect stoneOneRect = {.x = itemX[ITEM_STONE_ONE] + 2, .y = STONES_Y + 4, .width = 11, .height = 12};
-  Rect stoneTwoRect = {.x = itemX[ITEM_STONE_TWO] + 2, .y = STONES_Y + 4, .width = 11, .height = 12};
-  Rect birdOneRect = {.x = itemX[ITEM_BIRD_ONE] + 2, .y = BIRDS_Y + 4, .width = 12, .height = 20};
-  Rect birdTwoRect = {.x = itemX[ITEM_BIRD_TWO] + 2, .y = BIRDS_Y + 4, .width = 12, .height = 20};
-  Rect extraLifeRect = {.x = itemX[ITEM_EXTRA_LIFE] + 2, .y = HEART_Y + 2, .width = 12, .height = 12};
+  Rect stoneOneRect;
+  stoneOneRect.x = itemX[ITEM_STONE_ONE] + 2;
+  stoneOneRect.y = STONES_Y + 4;
+  stoneOneRect.width = 11;
+  stoneOneRect.height = 12;
+
+  Rect stoneTwoRect;
+  stoneTwoRect.x = itemX[ITEM_STONE_TWO] + 2;
+  stoneTwoRect.y = STONES_Y + 4;
+  stoneTwoRect.width = 11;
+  stoneTwoRect.height = 12;
+
+  Rect birdOneRect;
+  birdOneRect.x = itemX[ITEM_BIRD_ONE] + 2;
+  birdOneRect.y = BIRDS_Y + 4;
+  birdOneRect.width = 12;
+  birdOneRect.height = 20;
+
+  Rect birdTwoRect;
+  birdTwoRect.x = itemX[ITEM_BIRD_TWO] + 2;
+  birdTwoRect.y = BIRDS_Y + 4;
+  birdTwoRect.width = 12;
+  birdTwoRect.height = 20;
+
+  Rect extraLifeRect;
+  extraLifeRect.x = itemX[ITEM_EXTRA_LIFE] + 2;
+  extraLifeRect.y = HEART_Y + 2;
+  extraLifeRect.width = 12;
+  extraLifeRect.height = 12;
 
   if ((showitems & B00000001) && arduboy.collide(runnerRect, stoneOneRect))
   {

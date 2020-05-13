@@ -1,7 +1,7 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
-#include <Arduboy2.h>
+#include "Arduboy2.h"
 #include "bitmaps.h"
 
 //define menu states (on main menu)
