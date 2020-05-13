@@ -1,7 +1,6 @@
 #ifndef MENU_H
 #define MENU_H
 
-#include <Arduino.h>
 #include "globals.h"
 #include "runner.h"
 

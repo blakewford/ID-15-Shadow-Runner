@@ -1,7 +1,6 @@
 #ifndef PLAYFIELD_H
 #define PLAYFIELD_H
 
-#include <Arduino.h>
 #include "globals.h"
 #include "runner.h"
 #include "items.h"

@@ -1,5 +1,5 @@
 runner: main.cpp
-	$(CC) -O0 -target $(Target) -gdwarf-4 -std=c++11 main.cpp -o $@ -I. -DPROGMEM= -include port.h -Wno-narrowing -fpermissive -fno-pie
+	$(CC) -O0 -target $(Target) -gdwarf-4 -std=c++11 main.cpp -o $@ -I. -Wno-narrowing -fpermissive -fno-pie
 
 clang-runner: main.cpp
 	clang++ -gdwarf-4 -std=c++11 main.cpp -o $@ -I. -DPROGMEM= -include port.h -Wno-narrowing -fpermissive -fno-pie

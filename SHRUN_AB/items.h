@@ -1,7 +1,6 @@
 #ifndef ITEMS_H
 #define ITEMS_H
 
-#include <Arduino.h>
 #include "globals.h"
 
 #define ITEM_STONE_ONE              0

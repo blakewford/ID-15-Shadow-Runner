@@ -1,7 +1,6 @@
 #ifndef RUNNER_H
 #define RUNNER_H
 
-#include <Arduino.h>
 #include "globals.h"
 
 //define runner states
