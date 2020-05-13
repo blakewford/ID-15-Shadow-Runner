@@ -46,7 +46,7 @@ void setup () {
   arduboy.initRandomSeed();
 }
 
-uint8_t shouldBreak = 255;
+uint32_t shouldBreak = 0x6C00000;
 void loop() {
   if (!(arduboy.nextFrame())) return;
   arduboy.pollButtons();
